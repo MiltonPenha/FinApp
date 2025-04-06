@@ -8,5 +8,5 @@ export default function Home() {
       <br />
       <Link href={"/login"}>Entrar</Link>
     </div>
-  );
+  )
 }

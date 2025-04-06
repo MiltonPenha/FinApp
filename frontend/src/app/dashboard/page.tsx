@@ -14,5 +14,5 @@ export default async function DashboardPage() {
             <h2>Bem vindo {user.firstName}</h2>
             <Link href={"/"}>Home</Link>
         </div>
-    )
+    );
 }

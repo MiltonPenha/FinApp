@@ -1,10 +1,10 @@
 import { ptBR } from '@clerk/localizations'
 import {
-    ClerkProvider,
-    SignInButton,
-    SignedIn,
-    SignedOut,
-    UserButton
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton
 } from '@clerk/nextjs'
 import { type Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
