@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/platform-express": "^11.0.13",
     "@nestjs/swagger": "^11.1.0",
