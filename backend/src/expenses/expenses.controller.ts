@@ -57,7 +57,7 @@ export class ExpensesController {
     const result = await this.expensesService.findAll(page, limit);
     return {
       statusCode: HttpStatus.OK,
-      ...result,
+      ...(typeof result === 'object' && result !== null ? result : {}),
     };
   }
 }
