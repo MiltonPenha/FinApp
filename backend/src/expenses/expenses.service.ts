@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { CreateExpenseDto } from './expenses.schema';
 import { v4 as uuid } from 'uuid';
 import { Cache } from 'cache-manager';
@@ -58,23 +58,42 @@ export class ExpensesService {
     return result;
   }
 
-  async findOne(id: string) {
-    return this.prisma.expense.findUnique({ where: { id } });
-  }
-
-  async delete(id: string) {
-    const deleted = await this.prisma.expense.delete({ where: { id } });
-
-    await this.invalidatePaginationCache();
-
-    return deleted;
-  }
-
   private async invalidatePaginationCache() {
     const total = await this.prisma.expense.count();
     const lastPage = Math.ceil(total / 10);
 
     const keys = Array.from({ length: lastPage }, (_, i) => `expenses-page-${i + 1}`);
     await Promise.all(keys.map((key) => this.cacheManager.del(key)));
+  }
+
+  async update(id: string, dto: CreateExpenseDto) {
+    const expense = await this.prisma.expense.findUnique({ where: { id } });
+    if (!expense) throw new NotFoundException('Despesa não encontrada');
+  
+    const updatedExpense = await this.prisma.expense.update({
+      where: { id },
+      data: {
+        value: dto.value,
+        category: dto.category,
+        date: new Date(dto.date),
+        description: dto.description,
+      },
+    });
+  
+    await this.invalidatePaginationCache();
+    await this.cacheManager.del(`expense:${id}`);
+  
+    return updatedExpense;
+  }
+  
+  async delete(id: string) {
+    const existing = await this.prisma.expense.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Despesa não encontrada');
+  
+    await this.prisma.expense.delete({ where: { id } });
+  
+    await this.invalidatePaginationCache();
+    await this.cacheManager.del(`expense:${id}`);
+    return { message: 'Despesa removida com sucesso' };
   }
 }
