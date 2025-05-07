@@ -52,6 +52,7 @@
   * {
     border-color: hsl(var(--border));
   }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
@@ -62,11 +63,9 @@
 /* Componentes personalizados */
 @layer components {
   .gradient-bg {
-    background-image: linear-gradient(
-      to bottom right,
-      hsl(var(--primary) / 0.8),
-      hsl(var(--primary))
-    );
+    background-image: linear-gradient(to bottom right,
+        hsl(var(--primary) / 0.8),
+        hsl(var(--primary)));
   }
 
   .card-hover {
@@ -76,6 +75,7 @@
   .input-focus {
     @apply focus:ring-2;
   }
+
   .input-focus:focus {
     --tw-ring-color: hsl(var(--primary) / 0.5);
     border-color: hsl(var(--primary));
@@ -88,6 +88,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
