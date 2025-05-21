@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { getExpenses, updateExpense } from "@/lib/expense-service"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@clerk/nextjs"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -36,6 +37,7 @@ interface EditExpenseFormProps {
 
 export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
   const router = useRouter()
+  const { userId, isLoaded } = useAuth()
   const [date, setDate] = useState<Date>(new Date())
   const [formData, setFormData] = useState({
     value: "",
@@ -52,8 +54,20 @@ export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
         setIsLoading(true)
         setError(null)
 
+        if (!isLoaded) {
+          return
+        }
+
+        if (!userId) {
+          setError("Você precisa estar autenticado para editar uma despesa")
+          setIsLoading(false)
+          return
+        }
+
+        console.log("EditExpenseForm: Buscando despesa com userId:", userId)
+
         // Buscar todas as despesas e encontrar a que tem o ID correspondente
-        const response = await getExpenses(1, 1000)
+        const response = await getExpenses(1, 1000, userId)
         const expense = response.data.find((exp) => exp.id === expenseId)
 
         if (!expense) {
@@ -77,8 +91,10 @@ export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
       }
     }
 
-    fetchExpense()
-  }, [expenseId])
+    if (isLoaded) {
+      fetchExpense()
+    }
+  }, [expenseId, userId, isLoaded])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -94,6 +110,16 @@ export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
     setIsSubmitting(true)
 
     try {
+      if (!isLoaded || !userId) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar autenticado para atualizar uma despesa",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
+        return
+      }
+
       const value = Number.parseFloat(formData.value)
       if (isNaN(value) || value <= 0) {
         toast({
@@ -115,12 +141,17 @@ export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
         return
       }
 
-      const updatedExpense = await updateExpense(expenseId, {
-        value: value,
-        date: date,
-        category: formData.category,
-        description: formData.description || "Sem descrição",
-      })
+      console.log("EditExpenseForm: Atualizando despesa com userId:", userId)
+
+      const updatedExpense = await updateExpense(expenseId, 
+        {
+          value: value,
+          date: date,
+          category: formData.category,
+          description: formData.description || "Sem descrição",
+        },
+        userId,
+      )
 
       if (!updatedExpense) {
         throw new Error("Erro ao atualizar despesa")
@@ -202,7 +233,7 @@ export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} initialFocus />
+              <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} autoFocus />
             </PopoverContent>
           </Popover>
         </div>

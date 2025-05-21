@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Get, Query, DefaultValuePipe, ParseIntPipe, HttpStatus, Param, Delete, HttpCode, Put } from '@nestjs/common';
-import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { createExpenseSchema, CreateExpenseDto } from './expenses.schema';
+
+import { CreateExpenseDto, createExpenseSchema } from './expenses.schema';
 import { ExpensesService } from './expenses.service';
 
 @ApiTags('expenses')
@@ -19,6 +20,7 @@ export class ExpensesController {
         category: 'alimentação',
         date: '2023-05-15',
         description: 'Jantar no restaurante',
+        userId: 'userId-do-usuario', // Este campo será adicionado automaticamente
       },
     },
   })
@@ -31,8 +33,12 @@ export class ExpensesController {
     description: 'Dados inválidos',
   })
   async create(
-    @Body(new ZodValidationPipe(createExpenseSchema)) expense: CreateExpenseDto,
-  ) {
+    @Body(new ZodValidationPipe(createExpenseSchema)) expense: CreateExpenseDto) {
+    // Certifique-se de que o userId está incluído no corpo da requisição
+    if (!expense.userId) {
+      throw new BadRequestException('O ID do usuário é obrigatório');
+    }
+
     const newExpense = await this.expensesService.create(expense);
 
     return {
@@ -53,8 +59,10 @@ export class ExpensesController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('userId') userId: string,
   ) {
-    const result = await this.expensesService.findAll(page, limit);
+
+    const result = await this.expensesService.findAll(page, limit, userId);
     return {
       statusCode: HttpStatus.OK,
       ...(typeof result === 'object' && result !== null ? result : {}),

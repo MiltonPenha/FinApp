@@ -12,8 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { deleteExpense, getExpenses, type Expense } from "@/lib/expense-service"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { useAuth } from "@clerk/nextjs"
+import { format, parseISO } from "date-fns"
 import { Calendar, ChevronLeft, ChevronRight, Filter, Loader2, Pencil, Search, Trash2, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -54,6 +54,7 @@ export default function TransactionsList() {
   const { toast } = useToast()
   const router = useRouter()
   const limit = 10
+  const { userId, isLoaded } = useAuth()
 
   // Estados para filtros e pesquisa
   const [searchTerm, setSearchTerm] = useState("")
@@ -66,6 +67,23 @@ export default function TransactionsList() {
     endDate: undefined,
   })
   const [isFiltered, setIsFiltered] = useState(false)
+  const [totalItems, setTotalItems] = useState(0)
+
+  // Função para formatar a data corretamente
+  const formatDate = (date: string | Date): string => {
+    if (typeof date === "string") {
+      // Se for uma string ISO com Z (UTC), use parseISO e format
+      if (date.endsWith("Z")) {
+        return format(parseISO(date), "dd/MM/yyyy")
+      }
+      // Caso contrário, crie uma nova data
+      const d = new Date(date)
+      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+    }
+
+    // Se for um objeto Date
+    return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`
+  }
 
   // Buscar todas as transações
   useEffect(() => {
@@ -74,12 +92,58 @@ export default function TransactionsList() {
         setLoading(true)
         setError(null)
 
-        // Buscar todas as transações de uma vez (sem paginação na API)
-        const response = await getExpenses(1, 1000)
-        setAllTransactions(response.data)
+        if (!isLoaded){
+          return
+        }
 
-        // Aplicar filtros iniciais
-        applyFilters(response.data)
+        if (userId) {
+          console.log("TransactionsList: Buscando todas as transações com userId:", userId)
+
+          // Vamos verificar a resposta bruta da API para debug
+          const rawResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/expenses?userId=${encodeURIComponent(userId)}&limit=1000`,
+            {
+              headers: {
+                Authorization: `Bearer ${userId}`,
+                "Content-Type": "application/json",
+              },
+            },
+          )
+
+          if (!rawResponse.ok) {
+            throw new Error(`Erro ao buscar despesas: ${rawResponse.status} ${rawResponse.statusText}`)
+          }
+
+          const rawText = await rawResponse.text()
+          console.log("Resposta bruta da API (texto):", rawText)
+
+          const rawData = rawText ? JSON.parse(rawText) : []
+          console.log("Resposta bruta da API (JSON):", rawData)
+
+          // Processar os dados
+          let expenses: Expense[] = []
+
+          if (Array.isArray(rawData)) {
+            expenses = rawData
+          } else if (rawData && typeof rawData === "object") {
+            if (Array.isArray(rawData.data)) {
+              expenses = rawData.data
+            } else if (rawData.items && Array.isArray(rawData.items)) {
+              expenses = rawData.items
+            } else {
+              expenses = [rawData]
+            }
+          }
+
+          // Filtrar apenas as despesas do usuário atual
+          expenses = expenses.filter((expense) => expense.userId === userId)
+          console.log(`Despesas do usuário ${userId}: ${expenses.length}`)
+
+          // Atualizar estados
+          setAllTransactions(expenses)
+          setTotalItems(expenses.length)
+          applyFilters(expenses)
+        }
       } catch (err) {
         console.error("Erro ao buscar transações:", err)
         setError("Não foi possível carregar as transações. Tente novamente mais tarde.")
@@ -88,8 +152,10 @@ export default function TransactionsList() {
       }
     }
 
-    fetchAllTransactions()
-  }, [])
+    if (isLoaded) {
+      fetchAllTransactions()
+    }
+  }, [userId, isLoaded])
 
   // Aplicar filtros e atualizar a lista de transações
   const applyFilters = (transactions = allTransactions) => {
@@ -145,11 +211,40 @@ export default function TransactionsList() {
 
   // Atualizar transações exibidas com base na página
   const updateDisplayedTransactions = (transactions: Expense[], currentPage: number) => {
+    // Garantir que temos um array válido
+    const validTransactions = Array.isArray(transactions) ? transactions : []
+
+    console.log(`updateDisplayedTransactions: Total de transações: ${validTransactions.length}`)
+
+    // Calcular índices de início e fim para a página atual
     const startIndex = (currentPage - 1) * limit
     const endIndex = startIndex + limit
-    setDisplayedTransactions(transactions.slice(startIndex, endIndex))
-    setTotalPages(Math.ceil(transactions.length / limit))
-    setPage(currentPage)
+
+    // Obter as transações para a página atual
+    const transactionsForCurrentPage = validTransactions.slice(startIndex, endIndex)
+    console.log(`Transações para página ${currentPage}: ${transactionsForCurrentPage.length}`)
+
+    // Atualizar estado
+    setDisplayedTransactions(transactionsForCurrentPage)
+
+    // Calcular total de páginas (garantindo que seja pelo menos 1)
+    const calculatedTotalPages = Math.max(1, Math.ceil(validTransactions.length / limit))
+    console.log(`Total de páginas calculado: ${calculatedTotalPages}`)
+    setTotalPages(calculatedTotalPages)
+
+    // Atualizar o total de itens
+    setTotalItems(validTransactions.length)
+
+    // Garantir que a página atual não seja maior que o total de páginas
+    const validPage = Math.min(currentPage, calculatedTotalPages || 1)
+    if (validPage !== currentPage) {
+      console.log(`Ajustando página atual de ${currentPage} para ${validPage}`)
+    }
+    setPage(validPage)
+
+    console.log(
+      `Paginação: Página ${validPage} de ${calculatedTotalPages}, Total de itens: ${validTransactions.length}`,
+    )
   }
 
   // Efeito para atualizar as transações exibidas quando a página muda
@@ -196,8 +291,19 @@ export default function TransactionsList() {
 
   const handleDelete = async (id: string) => {
     try {
+      if (!userId) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar autenticado para excluir uma despesa",
+          variant: "destructive",
+        })
+        return
+      }
+
       setIsDeleting(id)
-      const success = await deleteExpense(id)
+      console.log("TransactionsList: Excluindo despesa com userId:", userId)
+
+      const success = await deleteExpense(id, userId)
 
       if (success) {
         toast({
@@ -208,6 +314,7 @@ export default function TransactionsList() {
         // Atualizar a lista local removendo a despesa excluída
         const updatedTransactions = allTransactions.filter((t) => t.id !== id)
         setAllTransactions(updatedTransactions)
+        setTotalItems(updatedTransactions.length)
         applyFilters(updatedTransactions)
       } else {
         throw new Error("Não foi possível excluir a despesa")
@@ -289,10 +396,10 @@ export default function TransactionsList() {
                   {dateRange.startDate ? (
                     dateRange.endDate ? (
                       <>
-                        {format(dateRange.startDate, "dd/MM/yy")} - {format(dateRange.endDate, "dd/MM/yy")}
+                        {formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}
                       </>
                     ) : (
-                      format(dateRange.startDate, "dd/MM/yyyy")
+                      formatDate(dateRange.startDate)
                     )
                   ) : (
                     "Filtrar por data"
@@ -311,7 +418,7 @@ export default function TransactionsList() {
                             selected={dateRange.startDate}
                             onSelect={(date) => setDateRange((prev) => ({ ...prev, startDate: date || undefined }))}
                             disabled={(date) => (dateRange.endDate ? date > dateRange.endDate : false)}
-                            initialFocus
+                            autoFocus
                           />
                         </div>
                       </div>
@@ -322,7 +429,7 @@ export default function TransactionsList() {
                             selected={dateRange.endDate}
                             onSelect={(date) => setDateRange((prev) => ({ ...prev, endDate: date || undefined }))}
                             disabled={(date) => (dateRange.startDate ? date < dateRange.startDate : false)}
-                            initialFocus
+                            autoFocus
                           />
                         </div>
                       </div>
@@ -392,8 +499,8 @@ export default function TransactionsList() {
             )}
             {dateRange.startDate && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Data: {format(dateRange.startDate, "dd/MM/yy")}
-                {dateRange.endDate && ` - ${format(dateRange.endDate, "dd/MM/yy")}`}
+                Data: {formatDate(dateRange.startDate)}
+                {dateRange.endDate && ` - ${formatDate(dateRange.endDate)}`}
                 <X
                   className="h-3 w-3 ml-1 cursor-pointer"
                   onClick={() => {
@@ -422,10 +529,13 @@ export default function TransactionsList() {
                 setLoading(true)
                 const fetchAllTransactions = async () => {
                   try {
-                    const response = await getExpenses(1, 1000)
-                    setAllTransactions(response.data)
-                    applyFilters(response.data)
-                    setError(null)
+                    if (userId) {
+                      const response = await getExpenses(1, 1000, userId)
+                      setAllTransactions(response.data)
+                      setTotalItems(response.data.length)
+                      applyFilters(response.data)
+                      setError(null)
+                    }
                   } catch (err) {
                     console.error("Erro ao buscar transações:", err)
                     setError("Não foi possível carregar as transações. Tente novamente mais tarde.")
@@ -454,11 +564,9 @@ export default function TransactionsList() {
               <TableBody>
                 {displayedTransactions.length > 0 ? (
                   displayedTransactions.map((transaction) => {
-                    const date = transaction.date instanceof Date ? transaction.date : new Date(transaction.date)
-
                     return (
                       <TableRow key={transaction.id}>
-                        <TableCell className="font-medium">{format(date, "dd/MM/yyyy", { locale: ptBR })}</TableCell>
+                        <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
                         <TableCell>{transaction.description}</TableCell>
                         <TableCell>
                           <Badge
@@ -515,14 +623,18 @@ export default function TransactionsList() {
         {!loading && filteredTransactions.length > 0 && (
           <div className="flex items-center justify-between px-4 py-4 border-t border-gray-200 dark:border-[#1F1F23]">
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Mostrando {displayedTransactions.length > 0 ? (page - 1) * limit + 1 : 0} a{" "}
-              {Math.min(page * limit, filteredTransactions.length)} de {filteredTransactions.length} transações
+              Mostrando {filteredTransactions.length > 0 ? (page - 1) * limit + 1 : 0} a{" "}
+              {Math.min(page * limit, filteredTransactions.length)} de {totalItems} transações
+              {totalPages > 1 && ` (${totalPages} páginas)`}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={page === 1 || loading}>
+              <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={page <= 1 || loading}>
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Anterior
               </Button>
+              <span className="flex items-center px-3 text-sm">
+                Página {page} de {totalPages}
+              </span>
               <Button variant="outline" size="sm" onClick={handleNextPage} disabled={page >= totalPages || loading}>
                 Próxima
                 <ChevronRight className="h-4 w-4 ml-1" />

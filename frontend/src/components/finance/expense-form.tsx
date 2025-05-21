@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { addExpense } from "@/lib/expense-service"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@clerk/nextjs"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "../ui/use-toast"
 
 const categories = [
   { value: "alimentação", label: "Alimentação" },
@@ -30,6 +32,7 @@ const categories = [
 
 export default function ExpenseForm() {
   const router = useRouter()
+  const { userId, isLoaded } = useAuth()
   const [date, setDate] = useState<Date>(new Date())
   const [formData, setFormData] = useState({
     value: "",
@@ -52,24 +55,52 @@ export default function ExpenseForm() {
     setIsSubmitting(true)
 
     try {
+      if (!isLoaded || !userId) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar autenticado para adicionar uma despesa",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
+        return
+      }
+
       const value = Number.parseFloat(formData.value)
       if (isNaN(value) || value <= 0) {
-        alert("Por favor, insira um valor válido")
+        toast({
+          title: "Erro",
+          description: "Por favor, insira um valor válido",
+          variant: "destructive",
+        })
         setIsSubmitting(false)
         return
       }
 
       if (!formData.category) {
-        alert("Por favor, selecione uma categoria")
+        toast({
+          title: "Erro",
+          description: "Por favor, selecione uma categoria",
+          variant: "destructive",
+        })
         setIsSubmitting(false)
         return
       }
 
-      await addExpense({
-        value: value,
-        date: date,
-        category: formData.category,
-        description: formData.description || "Sem descrição",
+      console.log("ExpenseForm: Adicionando despesa com userId:", userId)
+
+      await addExpense(
+        {
+          value: value,
+          date: date,
+          category: formData.category,
+          description: formData.description || "Sem descrição",
+        },
+        userId,
+      )
+
+      toast({
+        title: "Sucesso",
+        description: "Despesa adicionada com sucesso!",
       })
 
       // Reset form
@@ -85,7 +116,11 @@ export default function ExpenseForm() {
       router.refresh()
     } catch (error) {
       console.error("Error adding expense:", error)
-      alert("Erro ao adicionar despesa. Tente novamente.")
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar despesa. Tente novamente.",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -127,7 +162,7 @@ export default function ExpenseForm() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} initialFocus />
+              <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} autoFocus />
             </PopoverContent>
           </Popover>
         </div>

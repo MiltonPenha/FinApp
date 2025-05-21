@@ -14,6 +14,7 @@ model Expense {
   date        DateTime
   description String
   createdAt   DateTime @default(now())
+  userId      String
 }
 
 model Tip {

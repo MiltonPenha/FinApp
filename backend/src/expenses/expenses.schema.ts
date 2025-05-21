@@ -26,12 +26,13 @@ export const createExpenseSchema = z.object({
   }),
 
   date: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido (YYYY-MM-DD)')
     .refine(date => new Date(date) <= new Date(), 'A data não pode ser futura'),
 
   description: z.string()
     .min(1, 'A descrição não pode estar vazia')
-    .max(200, 'A descrição deve ter no máximo 200 caracteres')
+    .max(200, 'A descrição deve ter no máximo 200 caracteres'),
+
+  userId: z.string(),
 });
 
 export type CreateExpenseDto = z.infer<typeof createExpenseSchema>;

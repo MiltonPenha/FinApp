@@ -1,3 +1,7 @@
+"use client"
+
+import { toast } from "@/components/ui/use-toast"
+
 // Tipos para as despesas conforme a API
 export interface Expense {
   id: string
@@ -5,175 +9,215 @@ export interface Expense {
   category: string
   date: string | Date
   description: string
-  created_at?: string
-}
-
-export interface PaginatedResponse {
-  data: Expense[]
-  meta: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
-}
-
-export interface ApiResponse<T> {
-  statusCode: number
-  data: T
-  message: string
+  createdAt?: string
+  userId?: string
 }
 
 // URL base da API
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
-// Função para formatar a data para o formato esperado pela API (YYYY-MM-DD)
-export function formatDateForApi(date: Date): string {
-  return date.toISOString().split("T")[0]
+// Função para formatar a data para a API
+export function formatDateForAPI(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
 
-// Função para converter datas da API para objetos Date
-export function formatApiData(expense: any): Expense {
-  return {
-    ...expense,
-    date: new Date(expense.date),
+// Função para formatar a data para exibição
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+
+  // Verificar se a data termina com Z (UTC)
+  if (dateString.endsWith("Z")) {
+    // Usar métodos UTC para evitar problemas de fuso horário
+    const day = date.getUTCDate().toString().padStart(2, "0")
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, "0")
+    const year = date.getUTCFullYear()
+    return `${day}/${month}/${year}`
+  } else {
+    // Para datas sem indicação de UTC
+    const day = date.getDate().toString().padStart(2, "0")
+    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
   }
 }
 
 // Adicionar uma nova despesa
-export const addExpense = async (expense: Omit<Expense, "id">): Promise<Expense | null> => {
+export async function addExpense(expense: Omit<Expense, "id">, userId: string): Promise<Expense> {
+  if (!userId) {
+    throw new Error("Usuário não autenticado")
+  }
+
   try {
+    console.log("Enviando despesa com userId:", userId)
+
     const response = await fetch(`${API_URL}/expenses`, {
       method: "POST",
-      credentials: 'include',
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        value: expense.value,
-        category: expense.category,
-        date: expense.date instanceof Date ? formatDateForApi(expense.date) : expense.date,
-        description: expense.description,
+        ...expense,
+        userId,
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`Erro ao adicionar despesa: ${response.status}`)
+      const errorData = await response.json()
+      throw new Error(errorData.message || "Erro ao criar despesa")
     }
 
-    const result: ApiResponse<Expense> = await response.json()
-    return result.data
+    const data = await response.json()
+    return data
   } catch (error) {
     console.error("Erro ao adicionar despesa:", error)
-    throw error
-  }
-}
-
-// Parâmetros para filtrar despesas
-export interface ExpenseFilters {
-  search?: string
-  category?: string
-  startDate?: Date | string
-  endDate?: Date | string
-}
-
-// Obter despesas com filtros e paginação
-export const getFilteredExpenses = async (
-  page = 1,
-  limit = 10,
-  filters?: ExpenseFilters,
-): Promise<PaginatedResponse> => {
-  try {
-    // Construir a URL com os parâmetros de consulta
-    let url = `${API_URL}/expenses?page=${page}&limit=${limit}`
-
-    // Adicionar filtros à URL se fornecidos
-    if (filters) {
-      if (filters.search) {
-        url += `&search=${encodeURIComponent(filters.search)}`
-      }
-      if (filters.category) {
-        url += `&category=${encodeURIComponent(filters.category)}`
-      }
-      if (filters.startDate) {
-        const formattedDate =
-          filters.startDate instanceof Date ? formatDateForApi(filters.startDate) : filters.startDate
-        url += `&startDate=${encodeURIComponent(formattedDate)}`
-      }
-      if (filters.endDate) {
-        const formattedDate = filters.endDate instanceof Date ? formatDateForApi(filters.endDate) : filters.endDate
-        url += `&endDate=${encodeURIComponent(formattedDate)}`
-      }
-    }
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar despesas: ${response.status}`)
-    }
-
-    const result = await response.json()
-
-    // Formatar as datas
-    if (result.data) {
-      result.data = result.data.map(formatApiData)
-    }
-
-    return result
-  } catch (error) {
-    console.error("Erro ao buscar despesas filtradas:", error)
+    toast({
+      title: "Erro",
+      description: error instanceof Error ? error.message : "Erro ao criar despesa",
+      variant: "destructive",
+    })
     throw error
   }
 }
 
 // Obter todas as despesas com paginação
-export const getExpenses = async (page = 1, limit = 100): Promise<PaginatedResponse> => {
+export async function getExpenses(page = 1, limit = 10, userId?: string, search?: string, category?: string, startDate?: string, endDate?: string,
+): Promise<{ data: Expense[]; meta: {totalItems: number; totalPages: number; currentPage: number } }>  {
+
+  if (!userId) {
+    console.warn("Tentativa de buscar despesas sem userId")
+    return {
+      data: [],
+      meta: {
+        totalItems: 0,
+        totalPages: 0,
+        currentPage: page,
+      },
+    }
+  }
+
   try {
-    const response = await fetch(`${API_URL}/expenses?page=${page}&limit=${limit}`)
+    let url = `${API_URL}/expenses?page=${page}&limit=${limit}&userId=${encodeURIComponent(userId)}`
+
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`
+    }
+
+    if (category) {
+      url += `&category=${encodeURIComponent(category)}`
+    }
+
+    if (startDate) {
+      url += `&startDate=${encodeURIComponent(startDate)}`
+    }
+
+    if (endDate) {
+      url += `&endDate=${encodeURIComponent(endDate)}`
+    }
+
+    console.log("Buscando despesas com URL:", url)
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
     if (!response.ok) {
-      throw new Error(`Erro ao buscar despesas: ${response.status}`)
+      const errorData = await response.json()
+      throw new Error(errorData.message || "Erro ao buscar despesas")
     }
 
-    const result = await response.json()
+    // Vamos analisar a resposta bruta primeiro
+    const responseText = await response.text()
+    console.log("Resposta bruta da API (texto):", responseText)
 
-    // Formatar as datas
-    if (result.data) {
-      result.data = result.data.map(formatApiData)
+    // Agora vamos converter para JSON
+    const responseData = responseText ? JSON.parse(responseText) : null
+    console.log("Resposta da API (JSON):", responseData)
+
+    // Verificar se a resposta é um array ou um objeto com propriedade data
+    let data: Expense[] = []
+
+    if (Array.isArray(responseData)) {
+      // Se a resposta for um array, usamos diretamente
+      data = responseData
+      console.log("API retornou um array de despesas")
+    } else if (responseData && typeof responseData === "object") {
+      // Se for um objeto, verificamos se tem uma propriedade data
+      if (Array.isArray(responseData.data)) {
+        data = responseData.data
+        console.log("API retornou um objeto com array de despesas em data")
+      } else if (responseData.items && Array.isArray(responseData.items)) {
+        // Algumas APIs usam "items" em vez de "data"
+        data = responseData.items
+        console.log("API retornou um objeto com array de despesas em items")
+      } else {
+        // Se não encontrarmos um array, tentamos converter o próprio objeto
+        data = [responseData]
+        console.log("API retornou um objeto único, convertendo para array")
+      }
     }
 
-    return result
+    data = data.filter((expense) => expense.userId === userId)
+    console.log(`Após filtrar por userId (${userId}): ${data.length} despesas`)
+
+    // Calcular metadados de paginação
+    const totalItems = data.length
+    const totalPages = Math.max(1, Math.ceil(totalItems / limit))
+
+    // Se a API retornar metadados de paginação, usamos eles
+    const meta =
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+      responseData && responseData.meta
+        ? responseData.meta
+        : {
+            totalItems,
+            totalPages,
+            currentPage: page,
+          }
+
+    console.log(`API retornou ${data.length} despesas, total de ${meta.totalItems} itens em ${meta.totalPages} páginas`)
+
+    return {
+      data,
+      meta,
+    }
   } catch (error) {
     console.error("Erro ao buscar despesas:", error)
-    throw error
-  }
-}
-
-// Obter despesas para os últimos 30 dias
-export const getExpensesLast30Days = async (): Promise<Expense[]> => {
-  try {
-    // Como a API não tem um endpoint específico para isso,
-    // vamos buscar todas as despesas e filtrar no cliente
-    const result = await getExpenses(1, 1000)
-
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-    return result.data.filter((expense) => {
-      const expenseDate = expense.date instanceof Date ? expense.date : new Date(expense.date)
-      return expenseDate >= thirtyDaysAgo
-    })
-  } catch (error) {
-    console.error("Erro ao buscar despesas dos últimos 30 dias:", error)
-    throw error
+    return {
+      data: [],
+      meta: {
+        totalItems: 0,
+        totalPages: 0,
+        currentPage: page,
+      },
+    }
   }
 }
 
 // Obter o total de despesas para os últimos 30 dias
-export const getTotalExpensesLast30Days = async (): Promise<number> => {
+export async function getTotalExpensesLast30Days (userId?: string): Promise<number> {
+  if (!userId) {
+    return 0
+  }
+
   try {
-    const expenses = await getExpensesLast30Days()
-    return expenses.reduce((total, expense) => total + expense.value, 0)
+    const today = new Date()
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const startDate = formatDateForAPI(thirtyDaysAgo)
+    const endDate = formatDateForAPI(today)
+
+    const { data: expenses } = await getExpenses(1, 1000, userId, undefined, undefined, startDate, endDate)
+
+    const total = expenses.reduce((total, expense) => total + expense.value, 0)
+
+    return total
   } catch (error) {
     console.error("Erro ao calcular total de despesas:", error)
     return 0
@@ -181,35 +225,56 @@ export const getTotalExpensesLast30Days = async (): Promise<number> => {
 }
 
 // Obter despesas recentes (últimas 10)
-export const getRecentExpenses = async (limit = 10): Promise<Expense[]> => {
-  try {
-    const result = await getExpenses(1, limit)
+export async function getRecentExpenses (limit = 10, userId?: string): Promise<Expense[]> {
+  if (!userId) {
+    return []
+  }
 
-    // Ordenar por data (mais recente primeiro)
-    return result.data.sort((a, b) => {
-      const dateA = a.date instanceof Date ? a.date : new Date(a.date)
-      const dateB = b.date instanceof Date ? b.date : new Date(b.date)
-      return dateB.getTime() - dateA.getTime()
-    })
+  try {
+    console.log("Buscando despesas recentes com userId:", userId)
+    
+    const response = await fetch(`${API_URL}/expenses?page=1&limit=${limit}&userId=${encodeURIComponent(userId)}`)
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || "Erro ao buscar despesas recentes")
+    }
+
+    const data = await response.json()
+    return data.data || []
   } catch (error) {
     console.error("Erro ao buscar despesas recentes:", error)
-    throw error
+    return []
   }
 }
 
 // Obter despesas agrupadas por categoria
-export const getExpensesByCategory = async (): Promise<Record<string, number>> => {
-  try {
-    const expenses = await getExpensesLast30Days()
+export async function getExpensesByCategory (userId?: string): Promise<Record<string, number>> {
+  if (!userId) {
+    return {}
+  }
 
-    return expenses.reduce(
-      (acc, expense) => {
-        const { category, value } = expense
-        acc[category] = (acc[category] || 0) + value
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+  try {
+    const today = new Date()
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const startDate = formatDateForAPI(thirtyDaysAgo)
+    const endDate = formatDateForAPI(today)
+
+    const { data: expenses } = await getExpenses(1, 1000, userId, undefined, undefined, startDate, endDate)
+
+    const expensesByCategory: Record<string, number> = {}
+
+    expenses.forEach((expense) => {
+      const category = expense.category.toLowerCase()
+      if (!expensesByCategory[category]) {
+        expensesByCategory[category] = 0
+      }
+      expensesByCategory[category] += expense.value
+    })
+
+    return expensesByCategory
   } catch (error) {
     console.error("Erro ao agrupar despesas por categoria:", error)
     return {}
@@ -217,10 +282,19 @@ export const getExpensesByCategory = async (): Promise<Record<string, number>> =
 }
 
 // Excluir uma despesa
-export const deleteExpense = async (id: string): Promise<boolean> => {
+export async function deleteExpense (id: string, userId: string): Promise<boolean> {
+  if (!userId) {
+    throw new Error("Usuário não autenticado")
+  }
+
   try {
-    const response = await fetch(`${API_URL}/expenses/${id}`, {
+    console.log("Excluindo despesa com userId:", userId)
+
+    const response = await fetch(`${API_URL}/expenses/${id}?userId=${encodeURIComponent(userId)}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
 
     if (!response.ok) {
@@ -230,41 +304,49 @@ export const deleteExpense = async (id: string): Promise<boolean> => {
     return true
   } catch (error) {
     console.error("Erro ao excluir despesa:", error)
-    return false
+    toast({
+      title: "Erro",
+      description: error instanceof Error ? error.message : "Erro ao excluir despesa",
+      variant: "destructive",
+    })
+    throw error
   }
 }
 
 // Atualizar uma despesa
-export const updateExpense = async (id: string, expense: Partial<Expense>): Promise<Expense | null> => {
+export async function updateExpense (id: string, expense: Partial<Expense>, userId: string): Promise<Expense> {
+  if (!userId) {
+    throw new Error("Usuário não autenticado")
+  }
+
   try {
-    const updates: any = { ...expense }
+    console.log("Atualizando despesa com userId:", userId)
 
-    // Converter Date para string ISO se necessário
-    if (updates.date instanceof Date) {
-      updates.date = formatDateForApi(updates.date)
-    }
-
-    const response = await fetch(`${API_URL}/expenses/${id}`, {
+    const response = await fetch(`${API_URL}/expenses/${id}?userId=${encodeURIComponent(userId)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        value: updates.value,
-        category: updates.category,
-        date: updates.date,
-        description: updates.description,
+        ...expense,
+        userId,
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`Erro ao atualizar despesa: ${response.status}`)
+      const errorData = await response.json()
+      throw new Error(errorData.message || "Erro ao atualizar despesa")
     }
 
-    const result: ApiResponse<Expense> = await response.json()
-    return formatApiData(result.data)
+    const data = await response.json()
+    return data
   } catch (error) {
     console.error("Erro ao atualizar despesa:", error)
-    return null
+    toast({
+      title: "Erro",
+      description: error instanceof Error ? error.message : "Erro ao atualizar despesa",
+      variant: "destructive",
+    })
+    throw error
   }
 }

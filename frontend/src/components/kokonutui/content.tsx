@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { getTotalExpensesLast30Days } from "@/lib/expense-service"
+import { useAuth } from "@clerk/nextjs"
 import { AlertTriangle, CreditCard, PlusCircle, Wallet } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -14,13 +15,18 @@ export default function Content() {
   const [totalExpenses, setTotalExpenses] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [apiError, setApiError] = useState(false)
+  const { userId, isLoaded } = useAuth()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const total = await getTotalExpensesLast30Days()
-        setTotalExpenses(total)
+
+        if (isLoaded && userId) {
+          console.log("Content: Buscando total de despesas com userId:", userId)
+          const total = await getTotalExpensesLast30Days(userId)
+          setTotalExpenses(total)
+        }
 
         // Verificar se a URL da API está definida
         if (!process.env.NEXT_PUBLIC_API_URL) {
@@ -34,8 +40,10 @@ export default function Content() {
       }
     }
 
-    fetchData()
-  }, [])
+    if (isLoaded) {
+      fetchData()
+    }
+  }, [userId, isLoaded])
 
   return (
     <div className="space-y-4">
@@ -68,7 +76,7 @@ export default function Content() {
             Despesas (Últimos 30 dias)
           </h2>
           <div className="flex-1">
-            <List01 className="h-full" totalExpenses={totalExpenses} isLoading={isLoading} />
+            <List01 className="h-full" totalExpenses={totalExpenses} isLoading={isLoading} userId={userId} />
           </div>
         </div>
         <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23]">
@@ -77,7 +85,7 @@ export default function Content() {
             Transações Recentes
           </h2>
           <div className="flex-1">
-            <List02 className="h-full" />
+            <List02 className="h-full" userId={userId} />
           </div>
         </div>
       </div>

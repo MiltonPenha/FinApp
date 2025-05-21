@@ -18,6 +18,7 @@ interface List01Props {
   totalExpenses?: number
   isLoading?: boolean
   className?: string
+  userId?: string | null
 }
 
 const categoryLabels: Record<string, string> = {
@@ -32,7 +33,7 @@ const categoryLabels: Record<string, string> = {
   outros: "Outros",
 }
 
-export default function List01({ totalExpenses = 0, isLoading = false, className }: List01Props) {
+export default function List01({ totalExpenses = 0, isLoading = false, className, userId }: List01Props) {
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -40,18 +41,22 @@ export default function List01({ totalExpenses = 0, isLoading = false, className
     const fetchData = async () => {
       try {
         setLoading(true)
-        const expensesByCategory = await getExpensesByCategory()
 
-        const categoryItems: CategoryItem[] = Object.entries(expensesByCategory).map(([category, amount], index) => ({
-          id: index.toString(),
-          title: categoryLabels[category] || category,
-          description: "Últimos 30 dias",
-          balance: `R$ ${amount.toFixed(2)}`,
-          type: "expense",
-          category,
-        }))
+        if (userId) {
+          console.log("List01: Buscando despesas por categoria com userId:", userId)
+          const expensesByCategory = await getExpensesByCategory(userId)
 
-        setCategories(categoryItems)
+          const categoryItems: CategoryItem[] = Object.entries(expensesByCategory).map(([category, amount], index) => ({
+            id: index.toString(),
+            title: categoryLabels[category] || category,
+            description: "Últimos 30 dias",
+            balance: `R$ ${amount.toFixed(2)}`,
+            type: "expense",
+            category,
+          }))
+
+          setCategories(categoryItems)
+        }
       } catch (error) {
         console.error("Erro ao buscar despesas por categoria:", error)
       } finally {
@@ -60,7 +65,7 @@ export default function List01({ totalExpenses = 0, isLoading = false, className
     }
 
     fetchData()
-  }, [])
+  }, [userId])
 
   return (
     <div

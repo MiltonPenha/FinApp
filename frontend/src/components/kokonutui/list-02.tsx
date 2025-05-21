@@ -33,6 +33,7 @@ interface TransactionDisplay {
 
 interface List02Props {
   className?: string
+  userId?: string | null
 }
 
 const categoryIcons: Record<string, LucideIcon> = {
@@ -59,7 +60,7 @@ const categoryLabels: Record<string, string> = {
   outros: "Outros",
 }
 
-export default function List02({ className }: List02Props) {
+export default function List02({ className, userId }: List02Props) {
   const [transactions, setTransactions] = useState<TransactionDisplay[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -67,24 +68,28 @@ export default function List02({ className }: List02Props) {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const recentExpenses = await getRecentExpenses(10)
+        
+        if (userId) {
+          console.log("List02: Buscando despesas recentes com userId:", userId)
+          const recentExpenses = await getRecentExpenses(10, userId)
 
-        const formattedTransactions: TransactionDisplay[] = recentExpenses.map((expense: Expense) => {
-          const expenseDate = expense.date instanceof Date ? expense.date : new Date(expense.date)
+          const formattedTransactions: TransactionDisplay[] = recentExpenses.map((expense: Expense) => {
+            const expenseDate = expense.date instanceof Date ? expense.date : new Date(expense.date)
 
-          return {
-            id: expense.id,
-            title: expense.description || categoryLabels[expense.category] || "Despesa",
-            amount: `R$ ${typeof expense.value === "number" ? expense.value.toFixed(2) : expense.value}`,
-            type: "outgoing",
-            category: expense.category,
-            icon: categoryIcons[expense.category] || HelpCircle,
-            timestamp: format(expenseDate, "dd 'de' MMMM, HH:mm", { locale: ptBR }),
-            status: "completed",
-          }
-        })
+            return {
+              id: expense.id,
+              title: expense.description || categoryLabels[expense.category] || "Despesa",
+              amount: `R$ ${typeof expense.value === "number" ? expense.value.toFixed(2) : expense.value}`,
+              type: "outgoing",
+              category: expense.category,
+              icon: categoryIcons[expense.category] || HelpCircle,
+              timestamp: format(expenseDate, "dd 'de' MMMM, HH:mm", { locale: ptBR }),
+              status: "completed",
+            }
+          })
 
-        setTransactions(formattedTransactions)
+          setTransactions(formattedTransactions)
+        }
       } catch (error) {
         console.error("Erro ao buscar transações recentes:", error)
       } finally {
@@ -93,7 +98,7 @@ export default function List02({ className }: List02Props) {
     }
 
     fetchData()
-  }, [])
+  }, [userId])
 
   return (
     <div
