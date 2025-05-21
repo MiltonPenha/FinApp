@@ -7,23 +7,23 @@ type NewsItem = {
 };
 
 @Injectable()
-export class  NewsService {
+export class NewsService {
   private parser = new Parser();
   private rssFeeds = [
     'https://rss.app/feeds/2Qkjf941mU7S58Vb.xml'
   ];
 
   async fetchNews(): Promise<NewsItem[]> {
-    const tips: NewsItem[] = [];
+    const news: NewsItem[] = [];
 
     for (const feedUrl of this.rssFeeds) {
       try {
         const feed = await this.parser.parseURL(feedUrl);
-        const entries = feed.items.slice(0, 5); // pega os 5 mais recentes
+        const entries = feed.items.slice(0, 2); // pega os 2 mais recentes
 
         for (const item of entries) {
           if (item.title && item.link) {
-            tips.push({ title: item.title, link: item.link });
+            news.push({ title: item.title, link: item.link });
           }
         }
       } catch (err) {
@@ -31,6 +31,6 @@ export class  NewsService {
       }
     }
 
-    return tips;
+    return news;
   }
 }
