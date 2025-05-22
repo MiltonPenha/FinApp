@@ -14,4 +14,11 @@ model Expense {
   date        DateTime
   description String
   createdAt   DateTime @default(now())
+  userId      String
+}
+
+model Tip {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
 }
