@@ -16,6 +16,7 @@ const config = {
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/no-unsafe-call": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
+    "@next/next/no-img-element": "off",
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       {

@@ -3,7 +3,7 @@
 
 import type React from "react"
 
-import { CreditCard, HelpCircle, Home, Menu, Settings } from "lucide-react"
+import { CreditCard, HelpCircle, Home, Menu, Receipt, Settings } from "lucide-react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -78,6 +78,9 @@ export default function Sidebar() {
                   </NavItem>
                   <NavItem href="/transactions" icon={CreditCard}>
                     Transações
+                  </NavItem>
+                  <NavItem href="/receipt-scanner" icon={Receipt}>
+                    Ler Nota Fiscal
                   </NavItem>
                 </div>
               </div>
