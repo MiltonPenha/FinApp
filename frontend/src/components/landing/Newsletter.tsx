@@ -7,7 +7,7 @@ export default function Newsletter() {
             <div className="container text-center max-w-2xl mx-auto">
                 <h2 className="text-3xl font-bold">Fique por dentro</h2>
                 <p className="mt-4 text-lg text-muted-foreground">
-                    Assine nossa newsletter para receber dicas e novidades do FinAPP.
+                    Assine nossa newsletter para receber dicas e novidades do FinApp.
                 </p>
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                     <Input type="email" placeholder="Seu melhor e-mail" className="sm:flex-1" />

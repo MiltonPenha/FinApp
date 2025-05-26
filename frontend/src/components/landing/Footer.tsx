@@ -36,7 +36,7 @@ export default function Footer() {
                 </div>
             </div>
             <div className="border-t text-center text-muted-foreground py-6 text-sm">
-                © {new Date().getFullYear()} FinAPP. Todos os direitos reservados.
+                © {new Date().getFullYear()} FinApp. Todos os direitos reservados.
             </div>
         </footer>
     )
