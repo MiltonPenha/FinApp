@@ -3,7 +3,7 @@
 
 import type React from "react"
 
-import { CreditCard, HelpCircle, Home, Menu, Receipt, Settings } from "lucide-react"
+import { CreditCard, Home, Menu, Receipt } from "lucide-react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -84,17 +84,6 @@ export default function Sidebar() {
                   </NavItem>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="px-4 py-4 border-t border-gray-200 dark:border-[#1F1F23]">
-            <div className="space-y-1">
-              <NavItem href="#" icon={Settings}>
-                Configurações
-              </NavItem>
-              <NavItem href="#" icon={HelpCircle}>
-                Ajuda
-              </NavItem>
             </div>
           </div>
         </div>
