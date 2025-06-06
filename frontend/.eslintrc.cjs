@@ -16,6 +16,9 @@ const config = {
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/no-unsafe-call": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/prefer-regexp-exec": "off",
+    "react/no-unescaped-entities": "off",
+    "react-hooks/exhaustive-deps": "off",
     "@next/next/no-img-element": "off",
     "@typescript-eslint/consistent-type-imports": [
       "warn",

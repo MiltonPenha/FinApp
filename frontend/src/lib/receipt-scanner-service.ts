@@ -17,17 +17,17 @@ export function processReceiptText(text: string): ReceiptData {
 
   console.log("Texto normalizado para processamento:", normalizedText)
 
-  const lines = text
+  const lines: string[] = text
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
 
   console.log("Linhas extraídas:", lines)
 
-  for (let i = 0; i < Math.min(5, lines.length); i++) {
-    if (lines[i].length > 3 && !lines[i].match(/^(cnpj|cpf|nota fiscal|cupom|data|hora)/i)) {
-      receiptData.establishment = lines[i]
-      console.log("Estabelecimento encontrado:", lines[i])
+  for (const line of lines.slice(0, 5)) {
+    if (line.length > 3 && !(/^(cnpj|cpf|nota fiscal|cupom|data|hora)/i.exec(line))) {
+      receiptData.establishment = line
+      console.log("Estabelecimento encontrado:", line)
       break
     }
   }
@@ -37,11 +37,9 @@ export function processReceiptText(text: string): ReceiptData {
   const valorTotalPattern = /VALOR\s*TOTAL\s*R\$\s*(\d+[,.]\d{2})/i
 
   // Procurar o padrão em cada linha
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    console.log(`Verificando linha ${i} para VALOR TOTAL: "${line}"`)
-
-    const match = line.match(valorTotalPattern)
+  for (const line of lines) {
+    console.log(`Verificando linha para VALOR TOTAL: "${line}"`)
+    const match = valorTotalPattern.exec(line)
     if (match?.[1]) {
       receiptData.total = match[1].replace(",", ".")
       console.log(`VALOR TOTAL R$ encontrado: ${match[1]} na linha: "${line}"`)
@@ -62,30 +60,26 @@ export function processReceiptText(text: string): ReceiptData {
       /TOTAL\s*:\s*(\d+[,.]\d{2})/i,
     ]
 
-    for (const pattern of variations) {
-      // eslint-disable-next-line @typescript-eslint/prefer-for-of
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]
+    outerLoop: for (const pattern of variations) {
+      for (const line of lines) {
         const match = line.match(pattern)
         if (match?.[1]) {
           receiptData.total = match[1].replace(",", ".")
           console.log(`Variação de VALOR TOTAL encontrada: ${match[1]} na linha: "${line}"`)
           totalFound = true
-          break
+          break outerLoop
         }
       }
-      if (totalFound) break
     }
   }
 
   if (!totalFound) {
     console.log("Variações de VALOR TOTAL não encontradas. Procurando por qualquer valor após TOTAL...")
 
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toUpperCase()
+    for (const lineRaw of lines) {
+      const line = lineRaw.toUpperCase()
       if (line.includes("TOTAL")) {
-        console.log(`Linha com TOTAL encontrada: "${lines[i]}"`)
+        console.log(`Linha com TOTAL encontrada: "${lineRaw}"`)
 
         const valueMatches = /(\d+[,.]\d{2})/.exec(line)
         if (valueMatches?.[1]) {
@@ -109,14 +103,16 @@ export function processReceiptText(text: string): ReceiptData {
 
     const normalizedTextForValues = normalizedText.replace(/\s+/g, " ")
     while ((match = moneyPattern.exec(normalizedTextForValues)) !== null) {
-      const valueStr = match[1].replace(",", ".")
-      const value = Number.parseFloat(valueStr)
+      if (typeof match[1] === "string") {
+        const valueStr = match[1].replace(",", ".")
+        const value = Number.parseFloat(valueStr)
 
-      console.log("Valor monetário encontrado:", valueStr, "convertido para:", value)
+        console.log("Valor monetário encontrado:", valueStr, "convertido para:", value)
 
-      if (value > highestValue) {
-        highestValue = value
-        highestValueString = valueStr
+        if (value > highestValue) {
+          highestValue = value
+          highestValueString = valueStr
+        }
       }
     }
 
