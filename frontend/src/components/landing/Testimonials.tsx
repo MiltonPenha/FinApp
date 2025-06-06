@@ -6,19 +6,19 @@ const testimonials = [
     {
         name: "Ana Silva",
         type: "Usuária",
-        text: "O FinAPP mudou completamente minha relação com o dinheiro. Agora consigo visualizar exatamente onde estou gastando e economizei mais de R$ 500 por mês!",
+        text: "O FinApp mudou completamente minha relação com o dinheiro. Agora consigo visualizar exatamente onde estou gastando e economizei mais de R$ 500 por mês!",
         stars: 5,
     },
     {
         name: "Carlos Oliveira",
         type: "Usuário",
-        text: "Como dono de uma pequena empresa, o FinAPP me ajudou a organizar as finanças do negócio de forma simples e eficiente.",
+        text: "Como dono de uma pequena empresa, o FinApp me ajudou a organizar as finanças do negócio de forma simples e eficiente.",
         stars: 5,
     },
     {
         name: "Mariana Costa",
         type: "Usuária",
-        text: "Consegui organizar minhas finanças e criar metas. A interface é intuitiva e fácil de usar.",
+        text: "Consegui organizar minhas finanças. A interface é intuitiva e fácil de usar.",
         stars: 5,
     },
 ]
@@ -29,7 +29,7 @@ export default function Testimonials() {
             <div className="container text-center mx-auto">
                 <h2 className="text-3xl font-bold">O Que Nossos Usuários Dizem</h2>
                 <p className="mt-4 text-muted-foreground">
-                    Milhares de pessoas já transformaram suas finanças com o FinAPP.
+                    Milhares de pessoas já transformaram suas finanças com o FinApp.
                 </p>
                 <div className="mt-16 grid gap-8 md:grid-cols-3">
                     {testimonials.map((item, i) => (

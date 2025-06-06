@@ -10,7 +10,7 @@ export default function Hero() {
                     Controle suas finanças com <span className="text-[#8c53d1]">simplicidade</span> e <span className="text-[#8c53d1]">eficiência</span>
                 </h1>
                 <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-                    Gerencie suas despesas e alcance seus objetivos financeiros com o FinAPP.
+                    Gerencie suas despesas e alcance seus objetivos financeiros com o FinApp.
                 </p>
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                     <Button

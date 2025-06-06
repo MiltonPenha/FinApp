@@ -233,7 +233,17 @@ export default function EditExpenseForm({ expenseId }: EditExpenseFormProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} autoFocus />
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(date) => date && setDate(date)}
+                disabled={(date) => {
+                  const today = new Date()
+                  today.setHours(23, 59, 59, 999)
+                  return date > today
+                }}
+                initialFocus
+              />
             </PopoverContent>
           </Popover>
         </div>

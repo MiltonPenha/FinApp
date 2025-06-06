@@ -1,12 +1,13 @@
-import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import LandingPage from "./(internal)/landing-page";
 
-export default function Home() {
-  return (
-    <div className="h-screen flex justify-center items-center flex-col gap-4">
-      <h1 className="text-2xl">Home</h1>
-      <Link href={"/dashboard"}>Dashboard</Link>
-      <br />
-      <Link href={"/login"}>Entrar</Link>
-    </div>
-  );
+export default async function Home() {
+  const { userId } = await auth();
+
+  if (userId) {
+    redirect("/dashboard");
+  }
+
+  return <LandingPage />
 }

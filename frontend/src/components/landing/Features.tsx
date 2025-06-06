@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, PieChart, Receipt, Smartphone } from "lucide-react"
+import { Check, Lightbulb, PieChart, Receipt } from "lucide-react"
 
 const features = [
     {
@@ -11,14 +11,14 @@ const features = [
     {
         icon: Receipt,
         title: "Escaneamento de Boletos",
-        description: "Escaneie códigos de barras e registre seus boletos automaticamente.",
-        items: ["Reconhecimento automático", "Alertas de vencimento", "Histórico de pagamentos"]
+        description: "Escaneie códigos de barras com facilidade e registre seus boletos automaticamente.",
+        items: ["Reconhecimento automático", "Upload de imagens e PDFs", "Alertas de vencimento"]
     },
     {
-        icon: Smartphone,
-        title: "Acesso em Qualquer Lugar",
-        description: "Acesse suas finanças de qualquer dispositivo, a qualquer momento.",
-        items: ["Aplicação móvel", "Sincronização em tempo real", "Interface responsiva"]
+        icon: Lightbulb,
+        title: "Conteúdo Financeiro Inteligente",
+        description: "Receba dicas financeiras, sugestões de investimento e notícias atualizadas para tomar melhores decisões.",
+        items: ["Dicas de economia e organização", "Notícias do mercado financeiro", "Sugestões de investimentos"]
     }
 ]
 

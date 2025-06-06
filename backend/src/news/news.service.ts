@@ -10,7 +10,7 @@ type NewsItem = {
 export class NewsService {
   private parser = new Parser();
   private rssFeeds = [
-    'https://rss.app/feeds/2Qkjf941mU7S58Vb.xml'
+    'https://br.investing.com/rss/news_1065.rss'
   ];
 
   async fetchNews(): Promise<NewsItem[]> {

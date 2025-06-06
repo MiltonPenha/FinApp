@@ -34,6 +34,7 @@ export default function ExpenseForm() {
   const router = useRouter()
   const { userId, isLoaded } = useAuth()
   const [date, setDate] = useState<Date>(new Date())
+  const [dateError, setDateError] = useState<string | undefined>()
   const [formData, setFormData] = useState({
     value: "",
     category: "",
@@ -55,6 +56,20 @@ export default function ExpenseForm() {
     setIsSubmitting(true)
 
     try {
+      const today = new Date()
+      today.setHours(23, 59, 59, 999)
+
+      if (date > today) {
+        setDateError("Não é possível selecionar uma data futura")
+        toast({
+          title: "Erro de validação",
+          description: "Não é possível cadastrar uma despesa com data futura",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
+        return
+      }
+
       if (!isLoaded || !userId) {
         toast({
           title: "Erro",
@@ -155,6 +170,7 @@ export default function ExpenseForm() {
                 className={cn(
                   "w-full justify-start text-left font-normal bg-gray-50 dark:bg-[#1F1F23]",
                   !date && "text-muted-foreground",
+                  dateError && "border-red-500 focus:border-red-500",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -162,9 +178,20 @@ export default function ExpenseForm() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} autoFocus />
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(date) => date && setDate(date)}
+                disabled={(date) => {
+                  const today = new Date()
+                  today.setHours(23, 59, 59, 999)
+                  return date > today
+                }}
+                initialFocus
+              />
             </PopoverContent>
           </Popover>
+          {dateError && <p className="text-sm text-red-500 mt-1">{dateError}</p>}
         </div>
 
         <div className="space-y-2">

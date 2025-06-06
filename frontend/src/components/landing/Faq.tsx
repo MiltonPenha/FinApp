@@ -1,44 +1,34 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const faqs = [
     {
-        question: "O FinAPP é seguro?",
+        question: "O que é o FinApp?",
         answer:
-            "Sim, utilizamos criptografia de ponta a ponta e seguimos os mais altos padrões de segurança. Nenhuma senha bancária é armazenada.",
+            "O FinApp é um aplicativo web para gerenciamento de finanças pessoais. Com ele, você pode registrar despesas e ter um controle mais eficiente do seu dinheiro.",
     },
     {
-        question: "Posso cancelar minha assinatura a qualquer momento?",
+        question: "O FinApp é gratuito?",
         answer:
-            "Sim. Após o cancelamento, o plano continua ativo até o fim do período pago, sem cobranças adicionais.",
+            "Sim. O FinApp é totalmente gratuito e sempre será. Todas as funcionalidades estão disponíveis sem custo.",
     },
     {
-        question: "Como funciona a sincronização com bancos?",
+        question: "Preciso criar uma conta para usar?",
         answer:
-            "Conectamos com segurança às APIs dos principais bancos brasileiros para importar suas transações automaticamente.",
+            "Sim. É necessário criar uma conta para que seus dados fiquem salvos com segurança na nuvem.",
     },
     {
-        question: "Posso usar o FinAPP no celular?",
+        question: "Meus dados ficam salvos na nuvem?",
         answer:
-            "Sim! Está disponível para iOS, Android e navegadores, com sincronização em tempo real entre dispositivos.",
+            "Sim. Todos os seus dados são armazenados com segurança na nuvem, permitindo que você os acesse quando e onde quiser.",
     },
-    {
-        question: "O plano gratuito tem limitações?",
-        answer:
-            "Sim, o plano gratuito permite até 50 transações por mês e acesso a funcionalidades básicas. Para mais recursos, use o Premium.",
-    },
-    {
-        question: "Como funciona o suporte ao cliente?",
-        answer:
-            "Todos têm acesso via e-mail e chat. Clientes Premium e Empresarial recebem suporte prioritário.",
-    },
-]
+];
 
 export default function Faq() {
     return (
         <section className="py-20">
             <div className="container text-center mx-auto">
                 <h2 className="text-3xl font-bold">Perguntas Frequentes</h2>
-                <p className="mt-4 text-muted-foreground">Tire suas dúvidas sobre o FinAPP.</p>
+                <p className="mt-4 text-muted-foreground">Tire suas dúvidas sobre o FinApp.</p>
                 <div className="mt-16 grid gap-8 md:grid-cols-2 text-left">
                     {faqs.map((faq, i) => (
                         <Card key={i}>
