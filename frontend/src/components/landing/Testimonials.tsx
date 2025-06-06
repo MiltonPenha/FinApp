@@ -18,7 +18,7 @@ const testimonials = [
     {
         name: "Mariana Costa",
         type: "Usuária",
-        text: "Consegui organizar minhas finanças e criar metas. A interface é intuitiva e fácil de usar.",
+        text: "Consegui organizar minhas finanças. A interface é intuitiva e fácil de usar.",
         stars: 5,
     },
 ]

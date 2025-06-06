@@ -4,7 +4,7 @@ const faqs = [
     {
         question: "O que é o FinApp?",
         answer:
-            "O FinApp é um aplicativo web para gerenciamento de finanças pessoais. Com ele, você pode registrar despesas, visualizar gráficos de gastos e ter um controle mais eficiente do seu dinheiro.",
+            "O FinApp é um aplicativo web para gerenciamento de finanças pessoais. Com ele, você pode registrar despesas e ter um controle mais eficiente do seu dinheiro.",
     },
     {
         question: "O FinApp é gratuito?",
@@ -14,7 +14,7 @@ const faqs = [
     {
         question: "Preciso criar uma conta para usar?",
         answer:
-            "Sim. É necessário criar uma conta para que seus dados fiquem salvos com segurança na nuvem e possam ser acessados de qualquer dispositivo.",
+            "Sim. É necessário criar uma conta para que seus dados fiquem salvos com segurança na nuvem.",
     },
     {
         question: "Meus dados ficam salvos na nuvem?",
