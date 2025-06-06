@@ -80,6 +80,26 @@
     --tw-ring-color: hsl(var(--primary) / 0.5);
     border-color: hsl(var(--primary));
   }
+
+  /* Garantir que elementos clicáveis tenham cursor pointer */
+  button,
+  [role="button"],
+  .cursor-pointer,
+  a,
+  label[for],
+  input[type="checkbox"],
+  input[type="radio"],
+  select {
+    cursor: pointer;
+  }
+
+  /* Garantir que elementos desabilitados tenham cursor padrão */
+  button:disabled,
+  [role="button"]:disabled,
+  input:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
 }
 
 /* Animações */
