@@ -8,13 +8,13 @@ const steps = [
         image: "/placeholder.svg?height=200&width=300"
     },
     {
-        title: "Conecte suas contas",
-        description: "Vincule suas contas ou registre transações manualmente.",
+        title: "Registre suas transações",
+        description: "Adicione despesas e categorias manualmente.",
         image: "/placeholder.svg?height=200&width=300"
     },
     {
         title: "Gerencie suas finanças",
-        description: "Visualize relatórios e defina metas financeiras.",
+        description: "Veja tudo em um só lugar: gastos, dicas e notícias financeiras.",
         image: "/placeholder.svg?height=200&width=300"
     }
 ]
