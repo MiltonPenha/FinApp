@@ -5,6 +5,7 @@ import type React from "react"
 
 import { CreditCard, Home, Menu, Receipt } from "lucide-react"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -63,6 +64,13 @@ export default function Sidebar() {
       >
         <div className="h-full flex flex-col">
           <div className="h-16 px-6 flex items-center border-b border-gray-200 dark:border-[#1F1F23]">
+            <Image
+                src="/icon-finapp.png"
+                width={32}
+                height={32}
+                alt="FinApp Logo"
+                className="pr-2 pl-0.5"
+            />
             <span className="text-lg font-semibold text-gray-900 dark:text-white">FinApp</span>
           </div>
 
