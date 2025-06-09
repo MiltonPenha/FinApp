@@ -110,4 +110,28 @@ export class ExpensesController {
       ...result,
     };
   }
+
+  @Get('by-category')
+  @ApiOperation({ summary: 'Busca despesas por categoria para um usuário' })
+  @ApiQuery({ name: 'userId', required: true, example: 'uuid-do-usuario' })
+  @ApiQuery({ name: 'category', required: true, example: 'alimentação' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de despesas da categoria informada',
+  })
+  async getByCategory(
+    @Query('userId') userId: string,
+    @Query('category') category: string,
+  ) {
+    if (!userId || !category) {
+      throw new BadRequestException('userId e category são obrigatórios');
+    }
+
+    const data = await this.expensesService.getExpensesByCategory(userId, category);
+    return {
+      statusCode: HttpStatus.OK,
+      ...data,
+      message: `Foram encontradas ${data.count} despesas na categoria "${category}"`,
+    };
+  }
 }

@@ -102,4 +102,19 @@ export class ExpensesService {
     await this.cacheManager.del(`expense:${id}`);
     return { message: 'Despesa removida com sucesso' };
   }
+
+  async getExpensesByCategory(userId: string, category: string) {
+    const expenses = await this.prisma.expense.findMany({
+      where: {
+        userId,
+        category,
+      },
+      orderBy: { date: 'desc' },
+    });
+
+    return {
+      data: expenses,
+      count: expenses.length,
+    };
+  }
 }
