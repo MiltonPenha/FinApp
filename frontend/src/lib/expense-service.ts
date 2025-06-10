@@ -131,32 +131,25 @@ export async function getExpenses(page = 1, limit = 10, userId?: string, search?
       throw new Error(errorData.message || "Erro ao buscar despesas")
     }
 
-    // Vamos analisar a resposta bruta primeiro
     const responseText = await response.text()
     console.log("Resposta bruta da API (texto):", responseText)
 
-    // Agora vamos converter para JSON
     const responseData = responseText ? JSON.parse(responseText) : null
     console.log("Resposta da API (JSON):", responseData)
 
-    // Verificar se a resposta é um array ou um objeto com propriedade data
     let data: Expense[] = []
 
     if (Array.isArray(responseData)) {
-      // Se a resposta for um array, usamos diretamente
       data = responseData
       console.log("API retornou um array de despesas")
     } else if (responseData && typeof responseData === "object") {
-      // Se for um objeto, verificamos se tem uma propriedade data
       if (Array.isArray(responseData.data)) {
         data = responseData.data
         console.log("API retornou um objeto com array de despesas em data")
       } else if (responseData.items && Array.isArray(responseData.items)) {
-        // Algumas APIs usam "items" em vez de "data"
         data = responseData.items
         console.log("API retornou um objeto com array de despesas em items")
       } else {
-        // Se não encontrarmos um array, tentamos converter o próprio objeto
         data = [responseData]
         console.log("API retornou um objeto único, convertendo para array")
       }
@@ -165,11 +158,10 @@ export async function getExpenses(page = 1, limit = 10, userId?: string, search?
     data = data.filter((expense) => expense.userId === userId)
     console.log(`Após filtrar por userId (${userId}): ${data.length} despesas`)
 
-    // Calcular metadados de paginação
+    // Calcular dados de paginação
     const totalItems = data.length
     const totalPages = Math.max(1, Math.ceil(totalItems / limit))
 
-    // Se a API retornar metadados de paginação, usamos eles
     const meta =
       // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       responseData && responseData.meta

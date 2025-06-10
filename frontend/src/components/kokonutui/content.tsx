@@ -30,7 +30,6 @@ export default function Content() {
           setTotalExpenses(total)
         }
 
-        // Verificar se a URL da API está definida
         if (!process.env.NEXT_PUBLIC_API_URL) {
           console.warn("URL da API não configurada. Usando URL padrão.")
         }
@@ -65,8 +64,7 @@ export default function Content() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Erro de conexão</AlertTitle>
           <AlertDescription>
-            Não foi possível conectar à API de despesas. Verifique se o servidor está em execução e se a variável de
-            ambiente NEXT_PUBLIC_API_URL está configurada corretamente.
+            Não foi possível conectar à API de despesas. Verifique se o servidor está em execução
           </AlertDescription>
         </Alert>
       )}

@@ -101,8 +101,6 @@ export default function ExpenseForm() {
         return
       }
 
-      console.log("ExpenseForm: Adicionando despesa com userId:", userId)
-
       await addExpense(
         {
           value: value,
@@ -118,7 +116,6 @@ export default function ExpenseForm() {
         description: "Despesa adicionada com sucesso!",
       })
 
-      // Reset form
       setFormData({
         value: "",
         category: "",
@@ -126,7 +123,6 @@ export default function ExpenseForm() {
       })
       setDate(new Date())
 
-      // Redirect to dashboard
       router.push("/dashboard")
       router.refresh()
     } catch (error) {
