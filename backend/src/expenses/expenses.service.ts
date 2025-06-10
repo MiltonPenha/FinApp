@@ -112,9 +112,12 @@ export class ExpensesService {
       orderBy: { date: 'desc' },
     });
 
+    const totalValue = expenses.reduce((sum, expense) => sum + expense.value, 0);
+
     return {
       data: expenses,
       count: expenses.length,
+      totalValue
     };
   }
 }
