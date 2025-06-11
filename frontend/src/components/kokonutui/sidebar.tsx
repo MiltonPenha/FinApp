@@ -3,7 +3,7 @@
 
 import type React from "react"
 
-import { CreditCard, Home, Menu, Receipt } from "lucide-react"
+import { CreditCard, Home, Menu, Receipt, TrendingUp } from "lucide-react"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -89,6 +89,9 @@ export default function Sidebar() {
                   </NavItem>
                   <NavItem href="/receipt-scanner" icon={Receipt}>
                     Ler Nota Fiscal
+                  </NavItem>
+                  <NavItem href="/insights" icon={TrendingUp}>
+                    Insights
                   </NavItem>
                 </div>
               </div>

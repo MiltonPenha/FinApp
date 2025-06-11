@@ -1,12 +1,16 @@
-import { Module } from '@nestjs/common';
-import { ExpensesModule } from './expenses/expenses.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { Module } from '@nestjs/common';
+
+import { ExpensesModule } from './expenses/expenses.module';
+import { InsightsController } from './insights/insights.controller';
+import { InsightsModule } from './insights/insights.module';
+import { InsightsService } from './insights/insights.service';
+import { NewsController } from './news/news.controller';
 import { NewsModule } from './news/news.module';
 import { NewsService } from './news/news.service';
-import { NewsController } from './news/news.controller';
 import { TipsController } from './tips/tips.controller';
-import { TipsService } from './tips/tips.service';
 import { TipsModule } from './tips/tips.module';
+import { TipsService } from './tips/tips.service';
 
 
 @Module({
@@ -18,8 +22,9 @@ import { TipsModule } from './tips/tips.module';
     ExpensesModule,
     NewsModule,
     TipsModule,
+    InsightsModule,
   ],
-  providers: [NewsService, TipsService],
-  controllers: [NewsController, TipsController],
+  providers: [NewsService, TipsService, InsightsService],
+  controllers: [NewsController, TipsController, InsightsController],
 })
 export class AppModule { }

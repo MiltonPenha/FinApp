@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { getTotalExpensesLast30Days } from "@/lib/expense-service"
 import { useAuth } from "@clerk/nextjs"
-import { AlertTriangle, CreditCard, Lightbulb, Newspaper, PlusCircle, Wallet } from "lucide-react"
+import { AlertTriangle, CreditCard, Lightbulb, Newspaper, PlusCircle, TrendingUp, Wallet } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { FinancialTips } from "../finance/financial-tips"
+import { InsightsSummary } from "../finance/insights-summary"
 import { NewsFeed } from "../finance/news-feed"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import List01 from "./list-01"
@@ -87,6 +88,16 @@ export default function Content() {
           </h2>
           <div className="flex-1">
             <List02 className="h-full" userId={userId} />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23] lg:row-span-2">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
+            <TrendingUp className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
+            Insights Financeiros
+          </h2>
+          <div className="flex-1">
+            <InsightsSummary userId={userId} />
           </div>
         </div>
 

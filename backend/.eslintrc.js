@@ -46,5 +46,6 @@ module.exports = {
     "brace-style": ["warn", "1tbs"],
     camelcase: ["warn", { properties: "always" }],
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/max-len": "off",
   },
 };
